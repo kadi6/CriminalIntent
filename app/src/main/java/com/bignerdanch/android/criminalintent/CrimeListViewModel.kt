@@ -12,6 +12,8 @@ class CrimeListViewModel : ViewModel() {
             val crime = Crime()
             crime.title = "Crime #$i"
             crime.isSolved = i % 2 == 0
+            // Используя это свойство, мы помечаем каждый 5 элемент списка, чтобы разделить список на две группы элементов
+            crime.requiresPolice = i % 5 == 0
             crimes += crime
         }
     }
