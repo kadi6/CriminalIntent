@@ -5,18 +5,10 @@ import androidx.lifecycle.ViewModel
 // СПИСОК ОБЪЕКТНОЙ МОДЕЛИ
 class CrimeListViewModel : ViewModel() {
 
-    val crimes = mutableListOf<Crime>()
-
-    init {
-        for (i in 0 until 100) {
-            val crime = Crime()
-            crime.title = "Crime #$i"
-            crime.isSolved = i % 2 == 0
-            // Используя это свойство, мы помечаем каждый 5 элемент списка, чтобы разделить список на две группы элементов
-            crime.requiresPolice = i % 5 == 0
-            crimes += crime
-        }
-    }
+    // Делаем ссылку на репозиторий
+    private val crimeRepository = CrimeRepository.get()
+    // Вызываем функцию репозитория
+    val crimeListLiveData = crimeRepository.getCrimes()
 
 
 }
