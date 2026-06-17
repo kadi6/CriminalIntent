@@ -8,7 +8,7 @@ import com.bignerdanch.android.criminalintent.Crime
 // СОЗДАНИЕ ШАБЛОНА КЛАССА БАЗЫ ДАННЫХ - класс для описания всей базы данных
 
 // Сообщаем Room, что это класс базы данных
-@Database(entities = [ Crime::class ], version=1)
+@Database(entities = [ Crime::class ], version=2)
 
 
 
