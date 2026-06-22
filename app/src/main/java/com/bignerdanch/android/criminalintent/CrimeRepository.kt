@@ -7,6 +7,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.bignerdanch.android.criminalintent.database.CrimeDatabase
 import java.util.UUID
+import java.util.concurrent.Executors
 
 private const val DATABASE_NAME = "crime-database"
 
@@ -37,9 +38,23 @@ class CrimeRepository private constructor(context: Context) {
     // Помещаем в свойство объект DAO
     private val crimeDao = database.crimeDao()
 
+    // Создание исполнителя для создания фонового потока
+    private val executor = Executors.newSingleThreadExecutor()
+
     // Функции для работы с SQLite-файлом
     fun getCrimes(): LiveData<List<Crime>> = crimeDao.getCrimes()
     fun getCrime(id: UUID): LiveData<Crime?> = crimeDao.getCrime(id)
+
+    fun updateCrime(crime: Crime) {
+        executor.execute {
+            crimeDao.updateCrime(crime)
+        }
+    }
+    fun addCrime(crime: Crime) {
+        executor.execute {
+            crimeDao.addCrime(crime)
+        }
+    }
 
 
 

@@ -1,5 +1,6 @@
 package com.bignerdanch.android.criminalintent
 
+import android.content.Context
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
@@ -14,8 +15,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import java.util.UUID
 
 // Constant Pattern  — когда «магические числа» заменяются именованными константами. Это улучшает читаемость
 
@@ -29,8 +33,20 @@ private const val TYPE_HARD = 1
 
 class CrimeListFragment : Fragment() {
 
+
+    /**
+     * Требуемый интерфейс
+     */
+    interface Callbacks {
+        fun onCrimeSelected(crimeId: UUID)
+    }
+
+    // Свойство, чтобы удерживать объект, реализующий Callbacks
+    private var callbacks: Callbacks? = null
+
+
     private lateinit var crimeRecyclerView: RecyclerView
-    private var adapter: CrimeAdapter? = CrimeAdapter(emptyList()) // Инициализируем пустым списком
+    private var adapter: CrimeAdapter? = null
 
 
 
@@ -47,6 +63,14 @@ class CrimeListFragment : Fragment() {
         }
     }
 
+    // Установка свойства callbacks
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callbacks = context as Callbacks? // Мы требуем, чтобы Activity реализовывала наш интерфейс Callbacks
+
+
+    }
+
 
     // ЖИЗНЕННЫЙ ЦИКЛ ПРЕДСТАВЛЕНИЯ VIEW 
     override fun onCreateView(
@@ -61,6 +85,7 @@ class CrimeListFragment : Fragment() {
         // Настройка объекта
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
 
+        adapter = CrimeAdapter()
         crimeRecyclerView.adapter = adapter
 
 
@@ -81,12 +106,17 @@ class CrimeListFragment : Fragment() {
             })
     }
 
+    // Когда фрагмент отсоединяется, ссылка на Activity больше недействительна
+    override fun onDetach() {
+        super.onDetach()
+        callbacks = null
+    }
+
 
 
     // Создаем CrimeAdapter и устанавливаем его на RecyclerView
     private fun updateUI(crimes: List<Crime>) {
-        adapter = CrimeAdapter(crimes)
-        crimeRecyclerView.adapter = adapter
+        adapter?.submitList(crimes)
     }
 
 
@@ -122,7 +152,7 @@ class CrimeListFragment : Fragment() {
         }
 
         override fun onClick(v:View) {
-            Toast.makeText(context, "${crime.title} pressed!", Toast.LENGTH_SHORT).show()
+            callbacks?.onCrimeSelected(crime.id)
         }
 
     }
@@ -168,7 +198,7 @@ class CrimeListFragment : Fragment() {
 
         // Определяет по позиции, какой «тип» у данного элемента, и возвращает целое число — код этого типа
         override fun getItemViewType(position: Int): Int {
-            val crime = crimes[position]
+            val crime = getItem(position)
             if(crime.requiresPolice) {
                 return TYPE_HARD
             } else {
@@ -193,12 +223,12 @@ class CrimeListFragment : Fragment() {
         }
 
 
-        override fun getItemCount() = crimes.size
+
 
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             // Ищем данные "объектной модели" для этой позиции - данные конкретного элемента списка
-            val crime = crimes[position]
+            val crime = getItem(position)
             // Передаем элемент списка в холдер
             when (holder) {
                 // Проверка типа (TYPE CHECK) и приведение типа (SMART CAST) - Узнаем кто именно прилетел, и приводим его к нужному типу
@@ -208,6 +238,29 @@ class CrimeListFragment : Fragment() {
         }
 
 
+    }
+
+
+
+    private class CrimeDiffCallback : DiffUtil.ItemCallback<Crime>() {
+
+        // Проверяем, один и тот же ли это объект
+        override fun areItemsTheSame(
+            oldItem: Crime,
+            newItem: Crime
+        ): Boolean {
+
+            return oldItem.id == newItem.id
+        }
+
+        // Проверяем, изменилось ли содержимое
+        override fun areContentsTheSame(
+            oldItem: Crime,
+            newItem: Crime
+        ): Boolean {
+
+            return oldItem == newItem
+        }
     }
 
 
