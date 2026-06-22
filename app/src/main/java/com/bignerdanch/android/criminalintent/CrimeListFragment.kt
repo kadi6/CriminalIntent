@@ -163,7 +163,7 @@ class CrimeListFragment : Fragment() {
 
 
     // Шаблон Адаптера
-    private inner class CrimeAdapter(var crimes: List<Crime>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private inner class CrimeAdapter:  ListAdapter<Crime, RecyclerView.ViewHolder>(CrimeDiffCallback()) {
 
 
         // Определяет по позиции, какой «тип» у данного элемента, и возвращает целое число — код этого типа
