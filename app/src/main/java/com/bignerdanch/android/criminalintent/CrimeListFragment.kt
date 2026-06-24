@@ -277,21 +277,26 @@ class CrimeListFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        Log.d(TAG,"CrimeListFragment onStart()")
     }
 
     override fun onResume() {
+        Log.d(TAG, "CrimeListFragment onResume()")
         super.onResume()
     }
 
     override fun onPause() {
         super.onPause()
+        Log.d(TAG, "CrimeListFragment onPause()")
     }
 
     override fun onStop() {
         super.onStop()
+        Log.d(TAG,"CrimeListFragment onStop()")
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d(TAG,"CrimeListFragment onDestroy()")
     }
 }
