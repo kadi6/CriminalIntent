@@ -5,13 +5,20 @@ import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -21,7 +28,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.util.UUID
 
-// Constant Pattern  — когда «магические числа» заменяются именованными константами. Это улучшает читаемость
+// Constant Pattern — когда «магические числа» заменяются именованными константами. Это улучшает читаемость
 
 private const val TAG = "CrimeListFragment"
 
@@ -47,6 +54,8 @@ class CrimeListFragment : Fragment() {
 
     private lateinit var crimeRecyclerView: RecyclerView
     private var adapter: CrimeAdapter? = null
+    private lateinit var emptyStateLayout: LinearLayout
+    private lateinit var addCrimeButton: Button
 
 
 
@@ -85,6 +94,10 @@ class CrimeListFragment : Fragment() {
         // Настройка объекта
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
 
+        emptyStateLayout = view.findViewById(R.id.empty_state_layout)
+        addCrimeButton = view.findViewById(R.id.add_crime_button)
+
+
         adapter = CrimeAdapter()
         crimeRecyclerView.adapter = adapter
 
@@ -95,6 +108,44 @@ class CrimeListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // 1. Получаем MenuHost (activity, внутри которой находится данный фрагмент)
+        val menuHost: MenuHost = requireActivity()
+
+        // 2. Добавляем провайдер меню
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // Раздуваем меню
+                menuInflater.inflate(R.menu.fragment_crime_list, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                // Обработка кликов
+                return when (menuItem.itemId) {
+                    R.id.new_crime -> {
+                        val crime = Crime()
+                        crimeListViewModel.addCrime(crime)
+                        callbacks?.onCrimeSelected(crime.id)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        },
+            viewLifecycleOwner,
+            Lifecycle.State.RESUMED // Меню живет только когда фрагмент виден
+        )
+
+
+
+        addCrimeButton.setOnClickListener {
+            val crime = Crime()
+            crimeListViewModel.addCrime(crime)
+            callbacks?.onCrimeSelected(crime.id)
+        }
+
+
+
         // Вешаем наблюдателя за LiveData
         crimeListViewModel.crimeListLiveData.observe(
             viewLifecycleOwner,
@@ -117,10 +168,18 @@ class CrimeListFragment : Fragment() {
     // Создаем CrimeAdapter и устанавливаем его на RecyclerView
     private fun updateUI(crimes: List<Crime>) {
         adapter?.submitList(crimes)
+
+        if (crimes.isEmpty()) {
+            crimeRecyclerView.visibility = View.GONE
+            emptyStateLayout.visibility = View.VISIBLE
+        } else {
+            crimeRecyclerView.visibility = View.VISIBLE
+            emptyStateLayout.visibility = View.GONE
+        }
     }
 
 
-    // Шаблон первого Холдера
+    // Шаблон первого Holder
     private inner class CrimeHolder(view: View): RecyclerView.ViewHolder(view), View.OnClickListener { // Наследуем интерфейс OnClickListener - Этот класс сам будет слушателем нажатий
 
         // Создаём объект списка для использования его данных
@@ -159,7 +218,7 @@ class CrimeListFragment : Fragment() {
 
 
 
-    // Шаблон второго Холдера
+    // Шаблон второго Holder
     private inner class HardCrimeHolder(view: View): RecyclerView.ViewHolder(view), View.OnClickListener {
 
         private lateinit var crime: Crime

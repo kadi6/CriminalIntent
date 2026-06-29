@@ -10,5 +10,9 @@ class CrimeListViewModel : ViewModel() {
     // Вызываем функцию репозитория
     val crimeListLiveData = crimeRepository.getCrimes()
 
+    fun addCrime(crime: Crime) {
+        crimeRepository.addCrime(crime)
+    }
+
 
 }

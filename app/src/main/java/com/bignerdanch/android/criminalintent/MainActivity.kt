@@ -17,7 +17,21 @@ class MainActivity : AppCompatActivity(), CrimeListFragment.Callbacks {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // Добавление фрагмента в активити
+        // Использование отступов от системных панелей
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.fragment_container)) { view, insets -> // Мы регистрируем слушатель для fragment_container
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            view.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            )
+
+            insets
+        }
+
+        // Добавление фрагмента в activity
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 
         if (currentFragment == null) {
