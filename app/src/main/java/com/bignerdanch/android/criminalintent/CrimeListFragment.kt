@@ -65,12 +65,7 @@ class CrimeListFragment : Fragment() {
 
 
 
-    // Функция для получения экземпляра фрагмента
-    companion object {
-        fun newInstance(): CrimeListFragment {
-            return CrimeListFragment()
-        }
-    }
+
 
     // Установка свойства callbacks
     override fun onAttach(context: Context) {
@@ -357,5 +352,17 @@ class CrimeListFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG,"CrimeListFragment onDestroy()")
+    }
+
+
+
+
+
+
+    // Функция для получения экземпляра фрагмента
+    companion object {
+        fun newInstance(): CrimeListFragment {
+            return CrimeListFragment()
+        }
     }
 }

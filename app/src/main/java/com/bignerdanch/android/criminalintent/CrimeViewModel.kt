@@ -13,7 +13,7 @@ class CrimeViewModel() : ViewModel() {
     // связь с CrimeRepository
     private val crimeRepository = CrimeRepository.get()
 
-    // хранит идентификатор отображаемого в данный момент преступления / Ведём  наблюдение за идентификатором
+    // хранит идентификатор отображаемого в данный момент преступления / Ведём наблюдение за идентификатором
     private val crimeIdLiveData = MutableLiveData<UUID>()
 
 
@@ -23,7 +23,7 @@ class CrimeViewModel() : ViewModel() {
             crimeRepository.getCrime(crimeId)
         }
 
-    // инкапсулируем передачу данных - фрагмент просто передает аргумент (идентификатор) и дальше его внутренняя кухня ViewModel не интересует
+    // инкапсулируем передачу данных - фрагмент просто передает аргумент (идентификатор) и как именно дальше происходит передача данных его не интересует
     fun loadCrime(crimeId: UUID) {
         crimeIdLiveData.value = crimeId // передаем идентификатор
     }

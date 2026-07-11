@@ -1,6 +1,12 @@
 package com.bignerdanch.android.criminalintent
 
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
+import android.net.Uri
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
@@ -29,6 +35,11 @@ const val RESULT_KEY_DATE = "result_key_date"
 const val REQUEST_KEY_TIME = "request_key_time"
 const val RESULT_KEY_TIME = "result_key_time"
 
+private const val DATE_FORMAT = "EEE, MMM, dd"
+
+private const val REQUEST_CONTACT = 1
+private const val REQUEST_CALL = 2
+
 
 class CrimeFragment : Fragment() {
 
@@ -37,6 +48,9 @@ class CrimeFragment : Fragment() {
     private lateinit var dateButton: Button
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var timePicker: Button
+    private lateinit var reportButton: Button
+    private lateinit var suspectButton: Button
+
 
     private val crimeViewModel: CrimeViewModel by lazy {
         ViewModelProviders.of(this).get(CrimeViewModel::class.java)
@@ -46,7 +60,9 @@ class CrimeFragment : Fragment() {
         super.onCreate(savedInstanceState)
         Log.d(TAG,"CrimeFragment onCreate()")
 
+        // Получаем ссылку на объект модели
         crime = Crime()
+
         // Получение аргументов
         val crimeId: UUID = arguments?.getSerializable(ARG_CRIME_ID) as UUID
 
@@ -70,6 +86,8 @@ class CrimeFragment : Fragment() {
         dateButton = view.findViewById(R.id.crime_date) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
         timePicker = view.findViewById(R.id.crime_time) as Button
+        reportButton = view.findViewById(R.id.send_crime_report) as Button
+        suspectButton = view.findViewById(R.id.choose_suspect) as Button
 
 
 
@@ -80,6 +98,7 @@ class CrimeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         crimeViewModel.crimeLiveData.observe(
             viewLifecycleOwner,
             Observer { crime ->
@@ -181,6 +200,45 @@ class CrimeFragment : Fragment() {
                 }
             }
         }
+
+        reportButton.setOnClickListener {
+            // Создаём и настраиваем  implicit intent
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, getCrimeReport())
+                putExtra(
+                    Intent.EXTRA_SUBJECT,
+                    getString(R.string.crime_report_subject))
+            }.also { intent ->
+                // Создаем обязательное предоставление выбора activity приложений, которые работают с нашим intent
+                val chooserIntent =
+                    Intent.createChooser(intent, getString(R.string.send_report))
+                startActivity(chooserIntent)
+            }
+        }
+
+
+        suspectButton.apply {
+
+            val pickContactIntent =
+                Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI) // описание того, с каким набором данных должна работать запускаемая Activity
+            // Запускаем activity по переданному intent для возвращения результата
+            setOnClickListener {
+                startActivityForResult(pickContactIntent, REQUEST_CONTACT)
+            }
+
+            // Проверка реагирующих activities
+            val packageManager: PackageManager = requireActivity().packageManager
+            val resolvedActivity: ResolveInfo? =
+                packageManager.resolveActivity(
+                    pickContactIntent,
+                    PackageManager.MATCH_DEFAULT_ONLY
+                )
+            if (resolvedActivity == null) {
+                isEnabled = false
+            }
+        }
+
     }
 
 
@@ -226,6 +284,7 @@ class CrimeFragment : Fragment() {
 
 
 
+    // Функция, которая обновляет пользовательский интерфейс данными
     private fun updateUI() {
         titleField.setText(crime.title)
         dateButton.text = crime.date.toString()
@@ -234,11 +293,64 @@ class CrimeFragment : Fragment() {
             isChecked = crime.isSolved
             jumpDrawablesToCurrentState() // Android Немедленно перейди в конечное состояние без проигрывания анимации
         }
+        if (crime.suspect.isNotEmpty()) {
+            suspectButton.text = crime.suspect
+        }
+    }
+
+
+
+    // Эта функция вызывается перед onViewCreated( )
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when {
+            resultCode != Activity.RESULT_OK -> return
+            requestCode == REQUEST_CONTACT && data != null -> {
+
+                // Сохраняем в переменную значение свойства data переданного интента от другой activity
+                val contactUri: Uri = data.data ?: return
+
+                // Указываем, какой столбец мы хотим получить
+                val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
+
+                val cursor = requireActivity().contentResolver
+                    .query(contactUri, queryFields, null, null, null)
+
+                cursor?.use { // после окончания работы Cursor обязательно нужно закрыть
+
+                    // проверка того, что возвращенный курсор содержит хотя бы одну строку
+                    if (it.count == 0) {
+                        return
+                    }
+
+                    it.moveToFirst()
+                    val suspect = it.getString(0)
+                    crime.suspect = suspect
+                    crimeViewModel.saveCrime(crime)
+                    suspectButton.text = suspect
+                }
+            }
+        }
     }
 
 
 
 
+
+    private fun getCrimeReport(): String {
+        val solvedString = if (crime.isSolved) {
+            getString(R.string.crime_report_solved)
+        } else {
+            getString(R.string.crime_report_unsolved)
+        }
+        val dateString = DateFormat.format(DATE_FORMAT, crime.date).toString()
+        var suspect = if (crime.suspect.isBlank()) {
+            getString(R.string.crime_report_no_suspect)
+        } else {
+            getString(R.string.crime_report_suspect, crime.suspect)
+        }
+        return getString(R.string.crime_report,
+            crime.title, dateString, solvedString, suspect)
+    }
 
 
 

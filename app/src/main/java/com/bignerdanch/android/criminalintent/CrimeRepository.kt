@@ -12,9 +12,15 @@ import java.util.concurrent.Executors
 private const val DATABASE_NAME = "crime-database"
 
 // Миграция обновляет существующую базу данных, добавляя новую колонку в таблицу
-private val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("ALTER TABLE Crime ADD COLUMN requiresPolice INTEGER NOT NULL DEFAULT 0")
+private val migration_1_2 = object : Migration(1, 2) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE Crime ADD COLUMN requiresPolice INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+private val migration_2_3 = object : Migration(2, 3) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE Crime ADD COLUMN suspect TEXT NOT NULL DEFAULT ''")
     }
 }
 
@@ -31,8 +37,8 @@ class CrimeRepository private constructor(context: Context) {
         context.applicationContext,
         CrimeDatabase::class.java,
         DATABASE_NAME
-    )
-        .addMigrations(MIGRATION_1_2)
+        )
+        .addMigrations(migration_1_2, migration_2_3)
         .build()
 
     // Помещаем в свойство объект DAO
