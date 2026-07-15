@@ -24,6 +24,12 @@ private val migration_2_3 = object : Migration(2, 3) {
     }
 }
 
+private val migration_3_4 = object : Migration(3, 4) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE Crime ADD COLUMN suspectId TEXT")
+    }
+}
+
 
 
 // ШАБЛОН РЕПОЗИТОРИЯ - архитектурный посредник между UI и данными
@@ -38,7 +44,11 @@ class CrimeRepository private constructor(context: Context) {
         CrimeDatabase::class.java,
         DATABASE_NAME
         )
-        .addMigrations(migration_1_2, migration_2_3)
+        .addMigrations(
+            migration_1_2,
+            migration_2_3,
+            migration_3_4
+        )
         .build()
 
     // Помещаем в свойство объект DAO

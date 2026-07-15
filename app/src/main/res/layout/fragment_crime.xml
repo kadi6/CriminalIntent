@@ -46,4 +46,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/send_crime_report"/>
+    <Button
+        android:id="@+id/call"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/call"/>
 </LinearLayout>

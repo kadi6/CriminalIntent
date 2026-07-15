@@ -14,5 +14,6 @@ data class Crime (
     var date: Date = Date(), // по умолчанию задаёт текущую дату
     var isSolved: Boolean = false,
     var requiresPolice: Boolean = false,
-    var suspect: String = ""
+    var suspect: String = "",
+    var suspectId: String? = null
 )

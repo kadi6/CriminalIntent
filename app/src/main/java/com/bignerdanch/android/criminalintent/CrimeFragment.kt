@@ -1,5 +1,6 @@
 package com.bignerdanch.android.criminalintent
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,6 +19,8 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TimePicker
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -38,7 +41,7 @@ const val RESULT_KEY_TIME = "result_key_time"
 private const val DATE_FORMAT = "EEE, MMM, dd"
 
 private const val REQUEST_CONTACT = 1
-private const val REQUEST_CALL = 2
+
 
 
 class CrimeFragment : Fragment() {
@@ -50,6 +53,7 @@ class CrimeFragment : Fragment() {
     private lateinit var timePicker: Button
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
+    private lateinit var callButton: Button
 
 
     private val crimeViewModel: CrimeViewModel by lazy {
@@ -88,6 +92,7 @@ class CrimeFragment : Fragment() {
         timePicker = view.findViewById(R.id.crime_time) as Button
         reportButton = view.findViewById(R.id.send_crime_report) as Button
         suspectButton = view.findViewById(R.id.choose_suspect) as Button
+        callButton = view.findViewById(R.id.call) as Button
 
 
 
@@ -201,6 +206,11 @@ class CrimeFragment : Fragment() {
             }
         }
 
+
+
+
+
+
         reportButton.setOnClickListener {
             // Создаём и настраиваем  implicit intent
             Intent(Intent.ACTION_SEND).apply {
@@ -216,6 +226,10 @@ class CrimeFragment : Fragment() {
                 startActivity(chooserIntent)
             }
         }
+
+
+
+
 
 
         suspectButton.apply {
@@ -238,6 +252,33 @@ class CrimeFragment : Fragment() {
                 isEnabled = false
             }
         }
+
+
+
+
+
+        callButton.setOnClickListener {
+
+            // Проверяем дал ли пользователь разрешение
+            val permissionGranted =
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_CONTACTS
+                ) == PackageManager.PERMISSION_GRANTED
+
+            if (permissionGranted) {
+                dialSuspect()
+            } else {
+                requestPermissionLauncher.launch(       // Показ системного окна разрешения (асинхронный процесс)
+                    Manifest.permission.READ_CONTACTS
+                )
+            }
+        }
+
+
+
+
+
 
     }
 
@@ -300,7 +341,7 @@ class CrimeFragment : Fragment() {
 
 
 
-    // Эта функция вызывается перед onViewCreated( )
+    // Эта функция вызывается перед onViewCreated( ) - ОБРАБАТЫВАЕМ РЕЗУЛЬТАТ
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when {
             resultCode != Activity.RESULT_OK -> return
@@ -310,7 +351,7 @@ class CrimeFragment : Fragment() {
                 val contactUri: Uri = data.data ?: return
 
                 // Указываем, какой столбец мы хотим получить
-                val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
+                val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts._ID)
 
                 val cursor = requireActivity().contentResolver
                     .query(contactUri, queryFields, null, null, null)
@@ -324,7 +365,9 @@ class CrimeFragment : Fragment() {
 
                     it.moveToFirst()
                     val suspect = it.getString(0)
+                    val suspectId = it.getString(1)
                     crime.suspect = suspect
+                    crime.suspectId = suspectId
                     crimeViewModel.saveCrime(crime)
                     suspectButton.text = suspect
                 }
@@ -350,6 +393,67 @@ class CrimeFragment : Fragment() {
         }
         return getString(R.string.crime_report,
             crime.title, dateString, solvedString, suspect)
+    }
+
+
+    // Создаем ActivityResultLauncher
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()     // Contract
+        ) { isGranted ->        // Callback
+
+            if (isGranted) {
+                dialSuspect()
+            }
+        }
+
+
+
+
+    private fun dialSuspect() {
+
+        val contactId =
+            crime.suspectId ?: return
+
+        val queryFields = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        )
+
+        val selection =
+            "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?"
+
+        val selectionArgs =
+            arrayOf(contactId)
+
+        val cursor = requireActivity()
+            .contentResolver
+            .query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,     // Из какой таблицы или набора данных читать
+                queryFields,    // Какие столбцы вернуть
+                selection,  // По каким условиям искать строки WHERE CONTACT_ID = ?
+                selectionArgs,  // значения для ?
+                null
+            )
+        // Найди среди телефонных записей строки, у которых CONTACT_ID равен 42, и верни из них колонку NUMBER
+
+
+
+        cursor?.use {
+            if (it.count == 0) {
+                return
+            }
+
+            it.moveToFirst()
+
+            val phoneNumber = it.getString(0)
+
+            startActivity(
+                Intent(
+                    Intent.ACTION_DIAL,
+                    Uri.parse("tel:$phoneNumber")
+                )
+            )
+        }
     }
 
 
