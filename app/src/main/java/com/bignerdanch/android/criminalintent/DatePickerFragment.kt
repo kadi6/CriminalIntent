@@ -73,7 +73,7 @@ class DatePickerFragment: DialogFragment() {
 
 
 
-    // Функция для получения аргументов при передачи объекта Date от CrimeFragment
+    // Функция для получения аргументов при передаче объекта Date от CrimeFragment
     companion object {
         fun newInstance(date: Date): DatePickerFragment {
             val args = Bundle().apply {

@@ -1,6 +1,7 @@
 package com.bignerdanch.android.criminalintent
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import java.util.Date
 import java.util.UUID
@@ -16,4 +17,8 @@ data class Crime (
     var requiresPolice: Boolean = false,
     var suspect: String = "",
     var suspectId: String? = null
-)
+) {
+    @get:Ignore     // Помечаем, что свойство не относится к базе
+    val photoFileName
+        get() = "IMG_$id.jpg"
+}

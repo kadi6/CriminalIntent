@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.bignerdanch.android.criminalintent.database.CrimeDatabase
+import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -57,6 +58,8 @@ class CrimeRepository private constructor(context: Context) {
     // Создание исполнителя для создания фонового потока
     private val executor = Executors.newSingleThreadExecutor()
 
+    private val filesDir = context.applicationContext.filesDir  // Получаем absolute path к файлам нашего приложения
+
     // Функции для работы с SQLite-файлом
     fun getCrimes(): LiveData<List<Crime>> = crimeDao.getCrimes()
     fun getCrime(id: UUID): LiveData<Crime?> = crimeDao.getCrime(id)
@@ -71,6 +74,9 @@ class CrimeRepository private constructor(context: Context) {
             crimeDao.addCrime(crime)
         }
     }
+
+
+    fun getPhotoFile(crime: Crime): File = File(filesDir, crime.photoFileName) // Creates a new File instance from a parent abstract pathname and a child pathname string
 
 
 
