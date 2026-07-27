@@ -1,9 +1,11 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.crime_fragment
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.switchMap
+import com.bignerdanch.android.criminalintent.database.Crime
+import com.bignerdanch.android.criminalintent.database.CrimeRepository
 import java.io.File
 import java.util.UUID
 

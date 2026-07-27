@@ -1,11 +1,10 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.database
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.bignerdanch.android.criminalintent.database.CrimeDatabase
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors

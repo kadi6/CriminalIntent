@@ -1,11 +1,12 @@
 package com.bignerdanch.android.criminalintent
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.bignerdanch.android.criminalintent.crime_fragment.CrimeFragment
+import com.bignerdanch.android.criminalintent.crime_list_fragment.CrimeListFragment
 import java.util.UUID
 
 private const val TAG = "MainActivity"

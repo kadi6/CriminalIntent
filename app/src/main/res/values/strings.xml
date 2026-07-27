@@ -22,5 +22,6 @@
     <string name="send_report">Send crime report via</string>
 
     <string name="call">Call</string>
+    <string name="photo_of_crime">Photo of Crime</string>
 
 </resources>

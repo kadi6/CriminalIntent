@@ -1,6 +1,8 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.crime_list_fragment
 
 import androidx.lifecycle.ViewModel
+import com.bignerdanch.android.criminalintent.database.Crime
+import com.bignerdanch.android.criminalintent.database.CrimeRepository
 
 // СПИСОК ОБЪЕКТНОЙ МОДЕЛИ
 class CrimeListViewModel : ViewModel() {

@@ -1,4 +1,4 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.crime_list_fragment
 
 import android.content.Context
 import android.os.Bundle
@@ -19,13 +19,14 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bignerdanch.android.criminalintent.database.Crime
+import com.bignerdanch.android.criminalintent.R
 import java.util.UUID
 
 // Constant Pattern — когда «магические числа» заменяются именованными константами. Это улучшает читаемость

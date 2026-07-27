@@ -1,9 +1,11 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.crime_fragment.dialogs
 
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
+import com.bignerdanch.android.criminalintent.crime_fragment.REQUEST_KEY_DATE
+import com.bignerdanch.android.criminalintent.crime_fragment.RESULT_KEY_DATE
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar

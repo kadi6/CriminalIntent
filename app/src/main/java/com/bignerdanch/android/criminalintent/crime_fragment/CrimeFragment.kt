@@ -1,4 +1,4 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.crime_fragment
 
 import android.Manifest
 import android.app.Activity
@@ -16,18 +16,24 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.TimePicker
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.bignerdanch.android.criminalintent.database.Crime
+import com.bignerdanch.android.criminalintent.crime_fragment.dialogs.DatePickerFragment
+import com.bignerdanch.android.criminalintent.crime_fragment.dialogs.PhotoPickerFragment
+import com.bignerdanch.android.criminalintent.R
+import com.bignerdanch.android.criminalintent.crime_fragment.dialogs.TimePickerFragment
+import com.bignerdanch.android.criminalintent.getScaledBitmap
 import java.io.File
 import java.util.Date
 import java.util.UUID
@@ -36,6 +42,7 @@ private const val ARG_CRIME_ID = "crime_id"
 private const val TAG = "CrimeFragment"
 private const val DIALOG_DATE = "DialogDate"
 private const val DIALOG_TIME = "DialogTime"
+private const val DIALOG_PHOTO = "DialogPhoto"
 
 const val REQUEST_KEY_DATE = "request_key_date"
 const val RESULT_KEY_DATE = "result_key_date"
@@ -59,6 +66,9 @@ class CrimeFragment : Fragment() {
     private lateinit var crime: Crime
     private lateinit var photoFile: File
     private lateinit var photoUri: Uri
+
+
+    private lateinit var observer: ViewTreeObserver     // слушатель layout-прохода
 
 
     private lateinit var titleField: EditText
@@ -136,6 +146,10 @@ class CrimeFragment : Fragment() {
 
 
 
+
+
+
+
     // Здесь мы делаем updateUI - обновляем пользовательский интерфейс каждый раз, когда создается представление фрагмента
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -153,10 +167,46 @@ class CrimeFragment : Fragment() {
                         "com.bignerdranch.android.criminalintent.fileprovider",
                         photoFile
                     )
+
+
                     updateUI()
+                    tryUpdatePhotoView()
+
+
                 }
             }
         )
+
+
+
+
+
+
+
+        // Проверка layout-прохода
+
+        // Объект, через который регистрируются слушатели дерева View
+        observer = photoView.viewTreeObserver
+
+        // Создаем слушателя для ImageView
+        observer.addOnGlobalLayoutListener(
+            object : ViewTreeObserver.OnGlobalLayoutListener {
+
+                override fun onGlobalLayout() {
+
+                    photoView.viewTreeObserver
+                        .removeOnGlobalLayoutListener(this)     // Удаляем слушатель
+
+                    tryUpdatePhotoView()
+                }
+            }
+        )
+
+
+
+
+
+
 
         // ПОЛУЧАТЕЛЬ - получаем данные от FragmentManager - регистрируем слушателя
         parentFragmentManager.setFragmentResultListener(
@@ -166,7 +216,11 @@ class CrimeFragment : Fragment() {
 
             val selectedDate = bundle.getSerializable(RESULT_KEY_DATE) as Date // Извлекаем значения из bundle
             crime.date = selectedDate
+
+
             updateUI()
+
+
         }
 
 
@@ -178,7 +232,11 @@ class CrimeFragment : Fragment() {
 
             val selectedTime = bundle.getSerializable(RESULT_KEY_TIME) as Date
             crime.date = selectedTime
+
+
             updateUI()
+
+
         }
     }
 
@@ -365,6 +423,20 @@ class CrimeFragment : Fragment() {
 
 
 
+        photoView.apply {
+
+            setOnClickListener {
+                    if (photoFile.exists()) {
+                        PhotoPickerFragment.newInstance(photoFile.path)
+                            .show(this@CrimeFragment.parentFragmentManager, DIALOG_PHOTO)
+                    }
+            }
+
+        }
+
+
+
+
     }
 
 
@@ -397,6 +469,11 @@ class CrimeFragment : Fragment() {
 
 
 
+
+
+
+
+
     // Страховочный отзыв разрешения при откреплении фрагмента от Activity
     override fun onDetach() {
 
@@ -407,6 +484,9 @@ class CrimeFragment : Fragment() {
 
         super.onDetach()
     }
+
+
+
 
 
 
@@ -476,7 +556,9 @@ class CrimeFragment : Fragment() {
                     photoUri,
                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
-                updatePhotoView()
+
+                tryUpdatePhotoView()
+
             }
         }
     }
@@ -521,7 +603,6 @@ class CrimeFragment : Fragment() {
             suspectButton.text = crime.suspect
         }
 
-        updatePhotoView()   // Загружаем растровое изображение в ImageView
     }
 
 
@@ -592,7 +673,8 @@ class CrimeFragment : Fragment() {
         } else {
             getString(R.string.crime_report_suspect, crime.suspect)
         }
-        return getString(R.string.crime_report,
+        return getString(
+            R.string.crime_report,
             crime.title, dateString, solvedString, suspect)
     }
 
@@ -601,15 +683,48 @@ class CrimeFragment : Fragment() {
 
 
 
+
+
+
+
+
+    // Делаем проверку для загрузки изображения в ImageView
+    private fun tryUpdatePhotoView() {
+
+
+        // Был ли инициализирован photoFile - была ли загрузка данных LiveData
+        if(!::photoFile.isInitialized) {
+            return
+        }
+
+        val destWidth = photoView.width
+        val destHeight = photoView.height
+
+        if(destWidth == 0 || destHeight == 0) {
+            return
+        }
+
+        // После всех проверок, безопасно обновляем ImageView
+        updatePhotoView(destWidth, destHeight)
+    }
+
+
+
+
     // Загружаем Bitmap в ImageView
-    private fun updatePhotoView() {
+    private fun updatePhotoView(destWidth: Int, destHeight: Int) {
         if (photoFile.exists()) {
-            val bitmap = getScaledBitmap(photoFile.path, requireActivity())     // Создаем Bitmap
+            val bitmap = getScaledBitmap(photoFile.path, destWidth, destHeight)     // Создаем Bitmap
             photoView.setImageBitmap(bitmap)       // Загружаем Bitmap
         } else {
             photoView.setImageDrawable(null)
         }
     }
+
+
+
+
+
 
 
 

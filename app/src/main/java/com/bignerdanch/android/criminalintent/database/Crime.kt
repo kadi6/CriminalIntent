@@ -1,4 +1,4 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.database
 
 import androidx.room.Entity
 import androidx.room.Ignore

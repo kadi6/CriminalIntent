@@ -1,6 +1,7 @@
 package com.bignerdanch.android.criminalintent
 
 import android.app.Application
+import com.bignerdanch.android.criminalintent.database.CrimeRepository
 
 class CriminalIntentApplication: Application() {
 

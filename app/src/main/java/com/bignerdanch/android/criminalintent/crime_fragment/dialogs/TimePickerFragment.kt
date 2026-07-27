@@ -1,13 +1,13 @@
-package com.bignerdanch.android.criminalintent
+package com.bignerdanch.android.criminalintent.crime_fragment.dialogs
 
-import android.app.DatePickerDialog
 import android.app.Dialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
+import com.bignerdanch.android.criminalintent.crime_fragment.REQUEST_KEY_TIME
+import com.bignerdanch.android.criminalintent.crime_fragment.RESULT_KEY_TIME
 import java.util.Calendar
 import java.util.Date
-import java.util.GregorianCalendar
 
 private const val ARG_DATE_2 = "date_2"
 
